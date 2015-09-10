@@ -1,0 +1,48 @@
+<?php
+/*
+* hook_schema
+*/
+function mailfish_schema() {
+	$schema['mailfish'] = array(
+		'description' => 'Tabla para guardar email',
+		'fields' => array(
+			'id' => array(
+				'description' => 'Llave primaria',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				),
+			'uid' => array(
+				'description' => 'Id del usuario',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				),
+			'nid' => array(
+				'description' => 'Id del nodo',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				),
+			'mail' => array(
+				'description' => 'email usuario',
+				'type' => 'varchar',
+				'length' => 64,
+				'not null' => FALSE,
+				'default' => '',
+				),
+			'create' => array(
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+				'description' => 'Tiempo en que fue creado',
+				),
+			),
+		'primary key' => array('id'),
+		'indexes' => array(
+			  'node' => array('nid'),
+			  'node_user'=> array('nid', 'uid')
+			),
+		);
+	return $schema;
+}

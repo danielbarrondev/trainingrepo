@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Aprendiendo el uso de hooks
+ */
+
+/**
+ * Implementando hook_init()
+ */
+function introduction_init() {
+	//dpm('Modulo iniciando');
+}
+
+/**
+ * Implementando hook_menu()
+ */
+function introduction_menu() {
+	$items = array();
+	$items['intro'] = array(
+			'title' => 'Main Page introduction module',
+			'description' => 'Admin page',
+			'page callback' => 'introduction_callback',
+			'access arguments' => array('administer site configuration')
+		);
+
+	return $items;
+}
+
+/**
+ * funcion callback
+ */
+function introduction_callback() {
+	return 'Hola mundo';
+}
+
+/**
+ * implentando el hook_form_alter()
+ */
+function introduction_form_alter(&$form, $form_state, $form_id) {
+	if ($form_id == 'comment_node_article_form') {
+		$form['actions']['submit']['#value'] = t('Guardar');
+		dpm($form);
+	}
+}

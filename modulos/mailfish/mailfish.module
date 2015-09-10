@@ -1,0 +1,95 @@
+<?php
+/**
+ * @file
+ * Modulos para el envio de emails 
+ */
+
+/**
+ * Implementando Hook_menu() para 
+ * mailfish
+ */
+function mailfish_menu() {
+	$items = array();
+	// $items ['admin/config/content/mailfish'] = array();
+	$items['node/%/subscribe'] = array(
+		'title' => 'Subscribe',
+		'description' => 'Suscribir a este nodo',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mailfish_email_form', 1),
+		'access arguments' => array('access content'),
+		'type' => MENU_LOCAL_TASK,
+	);
+	return $items;
+}
+
+/**
+ * Funcion para definir un formulario
+ */
+function mailfish_email_form($form, $form_state, $nid = 0) {
+	global $user;
+	$form = array();
+
+	$form['email'] = array(
+		'#title' => t('Email address'),
+		'#type' => 'textfield',
+		'#size' => 20,
+		'#description' => t('Lista de emails'),
+		'#required' => TRUE,
+		'#default_value' => isset($user->mail) ? $user->mail : '',
+	);
+
+	$form['submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Suscribirse'),
+	);
+	
+	$form['nid'] = array(
+		'#type' => 'hidden',
+		'#value' => $nid,
+	);
+
+	return $form;
+}
+
+/**
+ * Implementacion de funcion de validacion para formulario
+ */
+function mailfish_email_form_validate($form, &$form_state) {
+	$email = $form_state['values']['email'];
+	if (!valid_email_address($email)) {
+		$message = t('La direccion de correo electonico %email, no es valida!', 
+			array('%email' => $email));
+		form_set_error('email', $message);
+	} // end if
+    // Validando si el email existe
+    $resultado = db_query('SELECT mail FROM {mailfish} WHERE mail = :email AND nid = :nid', 
+                   array(':email' => $form_state['values']['email'], 
+                         ':nid' => $form_state['values']['nid']))->fetchAll();
+    if (!empty($resultado)) {
+      form_set_error('email', t('El correo %email ya existe', 
+      	array('%email' => $form_state['values']['email'])));
+    } // end if
+	return TRUE;
+}
+
+/**
+ *
+ */
+function mailfish_email_form_submit($form, &$form_state) {
+   //dpm($form_state);
+   global $user;
+   $fields = array(
+     'nid' => $form_state['values']['nid'],
+     'uid' => $user->uid,
+     'mail' => $form_state['values']['email'],
+     'created' => REQUEST_TIME
+   );
+   
+   $insert = db_insert('mailfish');
+   $insert->fields($fields);
+   $result = $insert->execute();
+   dpm($result);
+   drupal_set_message(t('Ultimo id insertado: %id', 
+   	array('%id' => $result)), 'status');
+
+}

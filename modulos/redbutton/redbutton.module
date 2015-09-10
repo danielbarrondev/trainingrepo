@@ -1,0 +1,17 @@
+<?php
+/**
+* @file 
+* Archivo que define la funcionalidad de un boton que permite eliminar nodos
+*/
+
+/**
+* Implementando el hook_node_view()
+*/
+function redbutton_node_view($node, $view_mode) { 
+	$node->content['redbutton'] = array(); 
+	if ($node->type == 'listas') {
+		$node->content['redbutton']['#markup'] = l('Eliminar', 'node/' . $node->nid . '/delete', 
+		    array('attributes' => array('style' => 'color:red')));
+	}   
+	dpm($node);
+} 
