@@ -2,6 +2,7 @@
 /**
  * @file
  * Modulos para el envio de emails 
+ * 
  */
 
 /**
@@ -10,15 +11,29 @@
  */
 function mailfish_menu() {
 	$items = array();
-	// $items ['admin/config/content/mailfish'] = array();
-	$items['node/%/subscribe'] = array(
+	$items['admin/config/content/mailfish'] = array(
+		'title' => 'Administracion',
+		'description' => 'Menu de administracion',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('mailfish_admin_settings_form'),
+		'access arguments' => array('administer mailfish subscription'),
+		'file' => 'mailfish.admin.inc'
+	);
+	$items['admin/reports/mailfish'] = array(
+        'title' => 'Reportes de Mailfish',
+        'description' => 'Seccion de reportes de suscriptores de mailfish',
+        'page callback' => 'mailfish_signups',
+        'access arguments' => array('view mailfish subscription'),
+        'file' => 'mailfish.admin.inc'
+	);
+	/*$items['node/%/subscribe'] = array(
 		'title' => 'Subscribe',
 		'description' => 'Suscribir a este nodo',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('mailfish_email_form', 1),
-		'access arguments' => array('access content'),
+		'access arguments' => array('create mailfish subscription'),
 		'type' => MENU_LOCAL_TASK,
-	);
+	);*/
 	return $items;
 }
 
@@ -88,8 +103,83 @@ function mailfish_email_form_submit($form, &$form_state) {
    $insert = db_insert('mailfish');
    $insert->fields($fields);
    $result = $insert->execute();
-   dpm($result);
-   drupal_set_message(t('Ultimo id insertado: %id', 
+   drupal_set_message(t('ID de confirmacion: %id', 
    	array('%id' => $result)), 'status');
 
+}
+
+/**
+* Implementando hook_permission()
+*/
+function mailfish_permission() {
+  $perm = array(
+	  'view mailfish subscription' => array(
+	  	'title' => t('View Mailfish Subscription'),
+	  ),
+	  'create mailfish subscription' => array(
+	  	'title' => t('Create Mailfish Subscription'),
+	  ),
+	  'manage mailfish subscription' => array(
+	  	'title' => t('Manage Mailfish Subscription'),
+	  ),
+	  'administer mailfish subscription' => array(
+	  	'title' => t('Administer Mailfish Subscription'),
+	  ),
+  );
+  return $perm;
+}
+
+/**
+ * Implementando hook_block_info
+ */
+function mailfish_block_info() {
+	$blocks = array();
+	$blocks['mailfish_subscribe'] = array(
+		'info' => t('Mailfish Sign Up Form'),
+	);
+
+	return $blocks;
+}
+
+/**
+ * Implementando hook_block_view
+ */
+function mailfish_block_view($delta) {
+	$block = array();
+	switch ($delta) {
+		case 'mailfish_subscribe':
+			if (arg(0) == 'node' && is_numeric(arg(1))) {
+				$nid = arg(1);
+				$node = node_load($nid);
+				$types = variable_get('mailfish_check_form_api', array());
+				watchdog('mailfish', '%watchdog', array('%watchdog' => print_r($types, TRUE)), WATCHDOG_DEBUG);
+				if (!empty($types[$node->type])) {
+				  $form = drupal_get_form('mailfish_email_form', $nid);
+				  $block = array(
+					  'subject' => t('Formulario de logueo para este nodo!'),
+					  'content' => theme('mailfish_block', 
+						array('rendered_form' => drupal_render($form))),
+				  );
+				} // end if
+			} // end if
+			break;
+
+	} // end switch
+
+	return $block;
+}
+
+/**
+ * Implementando hook_theme()
+ */
+function mailfish_theme() {
+	$theme = array();
+	$theme['mailfish_block'] = array(
+		'variables' => array(
+			'rendered_form' => '',
+		),
+		'template' => 'mailfish-block',
+	);
+
+	return $theme;
 }

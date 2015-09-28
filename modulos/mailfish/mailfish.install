@@ -46,3 +46,10 @@ function mailfish_schema() {
 		);
 	return $schema;
 }
+
+/**
+* Implementando hook_uninstall()
+*/
+function mailfish_uninstall() {
+  variable_del('mailfish_check_form_api');
+}
